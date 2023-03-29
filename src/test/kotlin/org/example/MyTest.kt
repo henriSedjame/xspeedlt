@@ -28,7 +28,7 @@ class MyTest {
 
     @Test
     fun `optimized pack entry`() {
-        val entry = PackEntry("163841689525773")
+        val entry = PackEntry("163841689525773".split("").shuffled().joinToString(""))
         pack(entry, optimized = true).let {
             assertTrue (it.matchWith(entry) )
             assertEquals(8, it.size())
@@ -43,4 +43,5 @@ class MyTest {
             assertEquals(10, it.size())
         }
     }
+
 }
