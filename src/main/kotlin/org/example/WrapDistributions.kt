@@ -6,8 +6,8 @@ data class WrapDistributionItem(val content: Int, var itemNumber: Int = 1) : Com
             .comparing<WrapDistributionItem, Int> { it.content }
             .thenComparing<Int> {  it.itemNumber }
             .compare(this, other)
-
 }
+
 data class WrapDistribution(val items: List<WrapDistributionItem>): Comparable<WrapDistribution> {
     override fun compareTo(other: WrapDistribution): Int =
         Comparator

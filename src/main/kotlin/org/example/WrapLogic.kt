@@ -36,13 +36,11 @@ object WrapLogic {
     private suspend fun execOptimized(entry: WrapEntry): WrapResult = coroutineScope {
         val channel = Channel<WrapResult>(capacity = OPTIN_LEVEL)
 
-        repeat(OPTIN_LEVEL) {
-            launch {
-                doExecOptimized(entry.shuffle()).let { channel.send(it) }
-            }.join()
-        }
+        val range = IntRange(1, OPTIN_LEVEL)
 
-        IntRange(1, OPTIN_LEVEL).map { channel.receive() }.maxBy { it.distributions() }
+        range.map { launch { doExecOptimized(entry.shuffle()).let { channel.send(it) } } }.forEach { it.join() }
+
+        range.map { channel.receive() }.maxBy { it.distributions() }
     }
 
     private suspend fun doExecOptimized(entry: WrapEntry): WrapResult = coroutineScope {
