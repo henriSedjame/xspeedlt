@@ -32,7 +32,7 @@ value class PackResult(private val value: String){
         fun fromList(list: List<String>) = PackResult(list.joinToString(SEPARATOR))
     }
 
-    fun size() = value.split(SEPARATOR).size
+    fun size() = if(value.isEmpty()) 0 else value.split(SEPARATOR).size
 
     fun matchWith(entry: PackEntry): Boolean {
         val result = value.replace(SEPARATOR, "").split("").sorted().joinToString("")
