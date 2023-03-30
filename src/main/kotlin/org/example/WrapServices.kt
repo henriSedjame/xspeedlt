@@ -4,43 +4,59 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
+object WrapServices {
 
-const val OPTIN_LEVEL = 100
-const val SEPARATOR = "/"
-const val SIZE = 10
-
-object WrapLogic {
-    suspend fun wrap(entry: WrapEntry, optimized: Boolean = false): WrapResult = coroutineScope {
-        when (entry.length()) {
-            0 -> WrapResult.EMPTY
-            1 -> WrapResult.fromList(listOf(entry.value))
-            else -> if (optimized) execOptimized(entry) else execSimple(entry)
+    @JvmInline
+    value class OptimizationLevel(val value: Int) {
+        init {
+            require(value > 0) { OPTIMIZATION_LEVEL_MUST_BE_POSITIVE }
         }
     }
 
-    private fun execSimple(entry: WrapEntry) = with(entry.buildAccumulator()) { ->
+    class Accumulator(val size: Int = 0, var value: Int = 0) {
+
+        init {
+            require(size > 0) { ACCUMULATOR_SIZE_MUST_BE_POSITIVE }
+        }
+
+        companion object {
+            fun fromEntry(entry: WrapEntry) = Accumulator(size = entry.length() - ONE)
+        }
+
+        operator fun plusAssign(value: Int) {
+            this.value = "${this.value}$value".toInt()
+        }
+    }
+
+    suspend fun wrap(entry: WrapEntry, optimizationLevel: OptimizationLevel? = null): WrapResult = coroutineScope {
+        when (entry.length()) {
+            0 -> WrapResult.EMPTY
+            1 -> WrapResult.single(entry.value)
+            else -> optimizationLevel?.let { execOptimized(entry, it.value) } ?: execSimple(entry)
+        }
+    }
+
+    private fun execSimple(entry: WrapEntry) = with(Accumulator.fromEntry(entry)) { ->
         entry.toList()
             .mapIndexedNotNull { index, item ->
-                (sum(value.toString()) + item).let { v ->
-                    if (v > SIZE) {
+                (sum(value.toString()) + item).let { sum ->
+                    if (sum > SIZE) {
                         "$value".also { value = item }
                     } else {
                         this += item
-
                         if (entry.isLast(index)) this.value.toString() else null
                     }
                 }
             }.let { WrapResult.fromList(it) }
     }
 
-    private suspend fun execOptimized(entry: WrapEntry): WrapResult = coroutineScope {
-        val channel = Channel<WrapResult>(capacity = OPTIN_LEVEL)
-
-        val range = IntRange(1, OPTIN_LEVEL)
-
-        range.map { launch { doExecOptimized(entry.shuffle()).let { channel.send(it) } } }.forEach { it.join() }
-
-        range.map { channel.receive() }.maxBy { it.distributions() }
+    private suspend fun execOptimized(entry: WrapEntry, level: Int): WrapResult = coroutineScope {
+        with(Channel<WrapResult>(capacity = level)) {
+            IntRange(1, level).let {
+                it.map { launch { send(doExecOptimized(entry.shuffled())) } }.forEach { job -> job.join() }
+                it.map { receive() }.maxBy { result -> result.distribution() }
+            }
+        }
     }
 
     private suspend fun doExecOptimized(entry: WrapEntry): WrapResult = coroutineScope {

@@ -33,3 +33,8 @@ Articles      : 163841689525773
 Robot actuel  : 163/8/41/6/8/9/52/5/7/73 => 10 cartons utilisés
 Robot optimisé: 64/19/37/82/18/55/37/6   => 8  cartons utilisés
 ```
+
+####  Critères d'optimisation
+
+- **Nombre de cartons utilisés** 👉  _Moins on utilise de cartons, mieux c'est_ 😀
+- **Répartition des cartons** 👉 _Plus on a de cartons avec le plus d'articles, mieux c'est_ 😀

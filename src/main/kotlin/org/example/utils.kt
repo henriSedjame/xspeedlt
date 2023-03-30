@@ -1,9 +1,23 @@
 package org.example
 
-class Accumulator(val size: Int = 0, var value: Int = 0) {
-    operator fun plusAssign(value: Int) {
-        this.value = "${this.value}$value".toInt()
-    }
-}
-fun sum(entry: String) = entry.split("").filter { it.isNotEmpty() }.sumOf { it.toInt() }
+/**
+ * return sum of all digits in entry
+ */
+fun sum(entry: String) = entry.split(EMPTY_STR).filter { it.isNotEmpty() }.sumOf { it.toInt() }
 
+/**
+ * @return a [WrapServices.OptimizationLevel] from an [Int]
+ */
+fun Int.toOptimizationLevel() = WrapServices.OptimizationLevel(this)
+
+/**
+ * @return a shuffled version of a string
+ */
+fun String.shuffled(): String = this.split(EMPTY_STR).shuffled().joinToString(EMPTY_STR)
+
+/**
+ * @return a sorted version of a string
+ */
+fun String.sorted(block : List<String>.() -> List<String> = { this }): String = this.split(EMPTY_STR).run {
+    block()
+}.sorted().joinToString(EMPTY_STR)
